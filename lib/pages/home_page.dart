@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:supabase_v/pages/Category_list.dart';
 import 'package:supabase_v/pages/signin_signup_pages/signIn_page.dart';
 import 'package:supabase_v/supabase_config.dart';
@@ -262,6 +263,7 @@ class _HomePageState extends State<HomePage> {
   // }
 
   Future<void> _addNewBook() async {
+    // Validate inputs
     if (titleController.text.isEmpty ||
         authorController.text.isEmpty ||
         priceController.text.isEmpty ||
@@ -272,41 +274,51 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    try {
-      print('🟡 Adding the book into database');
-      final newBook = Book(
-        title: titleController.text,
-        author: authorController.text,
-        description: descriptionController.text,
-        price: priceController.text,
-        category: selectedCategory!,
+    final price = double.tryParse(priceController.text);
+    if (price == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid price')),
       );
+      return;
+    }
+
+    try {
+      final newBook = {
+        'title': titleController.text,
+        'author': authorController.text,
+        'description': descriptionController.text,
+        'price': price.toString(),
+        'category': selectedCategory!,
+        'created_at': DateTime.now().toIso8601String(),
+      };
 
       final response = await SupabaseConfig.client
           .from('books')
-          .insert(newBook.toMap())
+          .insert(newBook)
           .select()
           .single();
 
-      print('🟢 Book added into database: $response');
+      print('Book added successfully: $response');
 
-      // Clear form
       titleController.clear();
       authorController.clear();
       descriptionController.clear();
       priceController.clear();
       setState(() => selectedCategory = null);
 
-      // Refresh data
       await _loadData();
       if (mounted) Navigator.pop(context);
+
+    } on PostgrestException catch (e) {
+      print('Supabase error: ${e.message}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Database error: ${e.message}')),
+      );
     } catch (e) {
-      print('🔴 Error adding book: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding book: ${e.toString()}')),
-        );
-      }
+      print('Unexpected error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding book: ${e.toString()}')),
+      );
     }
   }
 
