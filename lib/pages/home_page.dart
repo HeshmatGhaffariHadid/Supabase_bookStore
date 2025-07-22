@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   final pricesNode = FocusNode();
 
   List<Book> books = [];
-  final List<String> categories = ['Science', 'Programming', 'Art', 'Literature'];
+  late List<String> categories = ['Science', 'Programming', 'Art', 'Literature'];
   bool isLoading = true;
   String? selectedCategory;
 
@@ -41,15 +41,20 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadData() async {
     setState(() => isLoading = true);
     try {
-      final books = await SupabaseConfig.client
-          .from('books')
-          .select('*')
-          .order('created_at', ascending: false);
+      // Load books with category names
+      final books = await BookService.getBooks();
+
+      // Load categories
+      final categoriesData = await BookService.getCategories();
+      final categoryNames = categoriesData.map((c) => c['name'] as String).toList();
 
       setState(() {
-        this.books = books.map((book) => Book.fromMap(book)).toList();
+        this.books = books;
+        this.categories = categoryNames;
       });
+
     } catch (e) {
+      print('Error loading data: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading data: $e')),
       );
@@ -207,20 +212,23 @@ class _HomePageState extends State<HomePage> {
   Widget _buildCategoryDropdown() {
     return DropdownButtonFormField<String>(
       value: selectedCategory,
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         labelText: 'Category',
-        // border: const OutlineInputBorder(),
+        border: OutlineInputBorder(),
       ),
-      items: [
-        ...categories.map((category) => DropdownMenuItem(
-          value: category,
-          child: Text(category),
-        )),
-      ], onChanged: (String? value) {
+      items: categories
+          .map((category) => DropdownMenuItem(
+        value: category,
+        child: Text(category),
+      ))
+          .toList(),
+      onChanged: (String? value) {
         setState(() {
           selectedCategory = value;
         });
-    },
+      },
+      validator: (value) =>
+      value == null ? 'Please select a category' : null,
     );
   }
 
@@ -263,7 +271,6 @@ class _HomePageState extends State<HomePage> {
   // }
 
   Future<void> _addNewBook() async {
-    // Validate inputs
     if (titleController.text.isEmpty ||
         authorController.text.isEmpty ||
         priceController.text.isEmpty ||
@@ -274,24 +281,26 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    final price = double.tryParse(priceController.text);
-    if (price == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid price')),
-      );
-      return;
-    }
-
     try {
+      // First get the category ID from the category name
+      final categoryResponse = await SupabaseConfig.client
+          .from('categories')
+          .select('id')
+          .eq('name', selectedCategory!)
+          .single();
+
+      final categoryId = categoryResponse['id'] as int;
+
+      // Create book object with proper category_id
       final newBook = {
         'title': titleController.text,
         'author': authorController.text,
         'description': descriptionController.text,
-        'price': price.toString(),
-        'category': selectedCategory!,
-        'created_at': DateTime.now().toIso8601String(),
+        'price': priceController.text,
+        'category_id': categoryId,
       };
 
+      // Insert into Supabase
       final response = await SupabaseConfig.client
           .from('books')
           .insert(newBook)
@@ -300,12 +309,14 @@ class _HomePageState extends State<HomePage> {
 
       print('Book added successfully: $response');
 
+      // Clear form
       titleController.clear();
       authorController.clear();
       descriptionController.clear();
       priceController.clear();
       setState(() => selectedCategory = null);
 
+      // Refresh data
       await _loadData();
       if (mounted) Navigator.pop(context);
 
@@ -344,6 +355,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildFeaturedBook(BuildContext context, Book book) {
+
+    String categoryName;
+    try {
+      categoryName = categories[book.categoryId - 1];
+    } catch (e) {
+      categoryName = 'Unknown';
+    }
+
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
@@ -353,7 +372,7 @@ class _HomePageState extends State<HomePage> {
           'title': book.title,
           'author': book.author,
           'description': book.description,
-          'category': book.category,
+          'category': categoryName,
           'price': book.price,
         },
       ),
@@ -406,7 +425,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
   Widget _buildCategory(String name, IconData icon) {
     final count = books.where((b) => b.category == name).length;
     return GestureDetector(

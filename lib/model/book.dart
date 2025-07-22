@@ -1,33 +1,33 @@
 class Book {
-  final String? id;
+  final String id;
   final String title;
   final String author;
   final String description;
-  final String category; // Changed to non-nullable
   final String price;
-  final DateTime? createdAt;
+  final int categoryId;
+  final DateTime createdAt;
+  String? category; // Add this field
 
   Book({
-    this.id,
+    required this.id,
     required this.title,
     required this.author,
     required this.description,
-    required this.category, // Now required
     required this.price,
-    this.createdAt,
+    required this.categoryId,
+    required this.createdAt,
+    this.category,
   });
 
   factory Book.fromMap(Map<String, dynamic> map) {
     return Book(
-      id: map['id']?.toString(),
-      title: map['title'] ?? '',
-      author: map['author'] ?? '',
-      description: map['description'] ?? '',
-      category: map['category'] ?? 'Uncategorized', // Default value
-      price: map['price']?.toString() ?? '0.0',
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'])
-          : null,
+      id: map['id'] as String,
+      title: map['title'] as String,
+      author: map['author'] as String,
+      description: map['description'] as String,
+      price: map['price'] as String,
+      categoryId: map['category_id'] as int,
+      createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
 
@@ -36,9 +36,8 @@ class Book {
       'title': title,
       'author': author,
       'description': description,
-      'category': category,
       'price': price,
-      if (id != null) 'id': id,
+      'category_id': categoryId,
     };
   }
 }

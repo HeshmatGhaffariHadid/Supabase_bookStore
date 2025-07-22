@@ -1,10 +1,7 @@
 
-import 'package:supabase_v/model/categories.dart';
 import 'book.dart';
 class FavStorage {
-  static final List<Book> favorites = [
-    Categories.art[0],
-  ];
+  static final List<Book> favorites = [];
 
   static void addFavorite(Book book) {
     favorites.add(book);

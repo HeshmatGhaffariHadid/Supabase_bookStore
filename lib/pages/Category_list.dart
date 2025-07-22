@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../model/book.dart';
 import '../services/book_service.dart';
+import '../supabase_config.dart';
 import 'details_page.dart';
 
 class CategoryList extends StatefulWidget {
@@ -28,7 +29,17 @@ class _CategoryListState extends State<CategoryList> {
   Future<void> _loadBooks() async {
     setState(() => isLoading = true);
     try {
-      books = await BookService.getBooksByCategory(category);
+      // First get category ID
+      final categoryResponse = await SupabaseConfig.client
+          .from('categories')
+          .select('id')
+          .eq('name', category)
+          .single();
+
+      final categoryId = categoryResponse['id'] as int;
+
+      // Then get books by category ID
+      books = await BookService.getBooksByCategory(categoryId);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading books: $e')),

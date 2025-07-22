@@ -4,35 +4,34 @@ import '../supabase_config.dart';
 class BookService {
   static const String tableName = 'books';
 
-  // Get all books sorted by creation date
   static Future<List<Book>> getBooks() async {
     final response = await SupabaseConfig.client
         .from(tableName)
-        .select()
+        .select('*, categories:category_id (name)')
         .order('created_at', ascending: false);
+
+    return (response as List).map((b) {
+      final categoryName = (b['categories'] as Map<String, dynamic>?)?['name'] as String? ?? 'Unknown';
+      return Book.fromMap(b)..category = categoryName;
+    }).toList();
+  }
+
+  static Future<List<Book>> getBooksByCategory(int categoryId) async {
+    final response = await SupabaseConfig.client
+        .from(tableName)
+        .select('*, categories:category_id (name)')
+        .eq('category_id', categoryId)
+        .order('created_at', ascending: false);
+
     return (response as List).map((b) => Book.fromMap(b)).toList();
   }
 
-  // Get books by category
-  static Future<List<Book>> getBooksByCategory(String category) async {
+  static Future<List<Map<String, dynamic>>> getCategories() async {
     final response = await SupabaseConfig.client
-        .from(tableName)
-        .select()
-        .eq('category', category)
-        .order('created_at', ascending: false);
-    return (response as List).map((b) => Book.fromMap(b)).toList();
-  }
+        .from('categories')
+        .select('*')
+        .order('name');
 
-  // Get all unique categories
-  static Future<List<String>> getCategories() async {
-    final response = await SupabaseConfig.client
-        .from(tableName)
-        .select('category');
-    final categories = (response as List)
-        .map((item) => item['category'] as String?)
-        .whereType<String>()
-        .toSet()
-        .toList();
-    return categories..sort();
+    return (response as List).cast<Map<String, dynamic>>();
   }
 }
