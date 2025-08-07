@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage> {
             child: IconButton(
               icon: const Icon(
                 Icons.favorite,
-                color: Colors.indigo,
+                color: Colors.red,
               ),
               onPressed: () => Navigator.pushNamed(context, FavoritesPage.routeName),
             ),
@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -166,13 +166,15 @@ class _HomePageState extends State<HomePage> {
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'science':
-        return Icons.science_outlined;
+        return Icons.science;
       case 'programming':
         return Icons.computer;
       case 'art':
         return Icons.palette;
-      case 'literature':
-        return Icons.menu_book;
+      case 'mathematical':
+        return Icons.calculate;
+      case 'medical':
+        return Icons.health_and_safety;
       default:
         return Icons.book;
     }
@@ -242,7 +244,6 @@ class _HomePageState extends State<HomePage> {
       value: selectedCategory,
       decoration: const InputDecoration(
         labelText: 'Category',
-        border: OutlineInputBorder(),
       ),
       items: categories
           .map((category) => DropdownMenuItem(
@@ -351,46 +352,49 @@ class _HomePageState extends State<HomePage> {
           'price': book.price,
         },
       ),
-      child: Card(
-        elevation: 4,
-        child: Container(
-          width: 120,
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  width: 70,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: Colors.grey[200],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 5),
+        child: Card(
+          elevation: 4,
+          child: Container(
+            width: 120,
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Container(
+                    width: 70,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: Colors.grey[200],
+                    ),
+                    child: const Icon(Icons.book, size: 60, color: primaryColor),
                   ),
-                  child: const Icon(Icons.book, size: 60, color: primaryColor),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                book.title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                book.author,
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '\$${book.price}',
-                style: const TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 8),
+                Text(
+                  book.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+                Text(
+                  book.author,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '\$${book.price}',
+                  style: const TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -405,6 +409,7 @@ class _HomePageState extends State<HomePage> {
         arguments: {'category': name},
       ),
       child: Card(
+        elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(5),
           child: Row(
