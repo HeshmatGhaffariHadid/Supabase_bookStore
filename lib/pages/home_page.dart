@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Book Store'),
+        title: const Text('Book Store', style: TextStyle(fontWeight: FontWeight.w500),),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black87),
@@ -114,9 +114,9 @@ class _HomePageState extends State<HomePage> {
             Text(
               'Featured Books',
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: Colors.grey[700],
               ),
             ),
             const SizedBox(height: 16),
@@ -136,9 +136,9 @@ class _HomePageState extends State<HomePage> {
             Text(
               'Popular Categories',
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: Colors.grey[700],
               ),
             ),
             const SizedBox(height: 16),
