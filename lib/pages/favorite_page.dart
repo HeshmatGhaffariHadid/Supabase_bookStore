@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_v/pages/details_page.dart';
-import 'package:supabase_v/supabase_config.dart';
+import 'package:supabase_v/services/book_service.dart';
 import '../constants.dart';
 import '../model/book.dart';
 
@@ -24,45 +24,38 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Future<void> _loadFavorites() async {
     setState(() => isLoading = true);
     try {
-      final response = await SupabaseConfig.client
-          .from('favorites')
-          .select('''
-            books (
-              id,
-              title,
-              author,
-              description,
-              category,
-              price
-            )
-          ''');
-
+      final favoriteBooks = await BookService.getFavorites();
       setState(() {
-        books = (response as List)
-            .map((fav) => Book.fromMap(fav['books']))
-            .toList();
+        books = favoriteBooks;
       });
     } catch (e) {
-      print('Error loading favorites: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading favorites: $e')),
+        );
+      }
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
   Future<void> deleteBook(Book book) async {
     try {
-      if (book.id != null) {
-        await SupabaseConfig.client
-            .from('favorites')
-            .delete()
-            .eq('book_id', book.id!);
-
-        _loadFavorites();
+      await BookService.deleteFavorite(book.id);
+      await _loadFavorites();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Removed from favorites')),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -71,11 +64,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Your Favorites')),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
         child: books.isEmpty
-            ? Center(
+            ? const Center(
           child: Text(
             'There are no books in your favorites!',
             style: TextStyle(color: Colors.indigo, fontSize: 20),
@@ -105,7 +98,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
               borderRadius: BorderRadius.circular(4),
               color: Colors.grey[400],
             ),
-            child: Icon(Icons.book, color: primaryColor, size: 38),
+            child: const Icon(Icons.book, color: primaryColor, size: 38),
           ),
           title: Text(book.title, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Column(
@@ -115,7 +108,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
               const SizedBox(height: 4),
               Text(
                 '\$${book.price}',
-                style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -131,7 +124,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
               'title': book.title,
               'author': book.author,
               'description': book.description,
-              'category': book.category,
+              'category': book.categoryName,
               'price': book.price,
             },
           ),
@@ -140,3 +133,4 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 }
+

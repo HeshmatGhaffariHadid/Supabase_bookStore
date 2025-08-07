@@ -2,42 +2,32 @@ class Book {
   final String id;
   final String title;
   final String author;
-  final String description;
+  final String? description;
   final String price;
-  final int categoryId;
-  final DateTime createdAt;
-  String? category; // Add this field
+  final int? categoryId;
+  final String categoryName;
 
   Book({
     required this.id,
     required this.title,
     required this.author,
-    required this.description,
+    this.description,
     required this.price,
-    required this.categoryId,
-    required this.createdAt,
-    this.category,
+    this.categoryId,
+    required this.categoryName,
   });
 
-  factory Book.fromMap(Map<String, dynamic> map) {
+  factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
-      id: map['id'] as String,
-      title: map['title'] as String,
-      author: map['author'] as String,
-      description: map['description'] as String,
-      price: map['price'] as String,
-      categoryId: map['category_id'] as int,
-      createdAt: DateTime.parse(map['created_at'] as String),
+      id: json["id"] as String,
+      title: json["title"] as String,
+      author: json["author"] as String,
+      description: json["description"] as String?,
+      price: json["price"] as String,
+      categoryId: json["category_id"] as int?,
+      categoryName: json["categories"] != null
+          ? (json["categories"] as Map<String, dynamic>)["name"] as String
+          : "Unknown",
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'author': author,
-      'description': description,
-      'price': price,
-      'category_id': categoryId,
-    };
   }
 }

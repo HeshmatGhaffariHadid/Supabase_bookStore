@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_v/supabase_config.dart';
 import 'package:supabase_v/services/book_service.dart';
 import '../constants.dart';
-import '../model/book.dart';
 
 class DetailsPage extends StatelessWidget {
   static const routeName = '/details';
@@ -11,12 +9,20 @@ class DetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final routeArguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
-    final bookTitle = routeArguments['title'];
-    final bookAuthor = routeArguments['author'];
-    final bookDescription = routeArguments['description'];
-    final bookCategory = routeArguments['category'];
-    final bookPrice = routeArguments['price'];
+    final routeArguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+    if (routeArguments == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Book Details')),
+        body: const Center(child: Text('No book data provided')),
+      );
+    }
+
+    final bookTitle = routeArguments['title'] ?? 'No title provided';
+    final bookAuthor = routeArguments['author'] ?? 'No author found';
+    final bookDescription = routeArguments['description'] ?? 'No description provided';
+    final bookCategory = routeArguments['category'] ?? 'Unknown';
+    final bookPrice = routeArguments['price'] ?? '0';
     final bookId = routeArguments['id'];
 
     return Scaffold(
@@ -35,29 +41,29 @@ class DetailsPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     color: Colors.grey[200],
                   ),
-                  child: Icon(Icons.book, size: 100, color: primaryColor),
+                  child: const Icon(Icons.book, size: 100, color: primaryColor),
                 ),
               ),
               const SizedBox(height: 24),
               Text(
-                bookTitle ?? 'No title provided',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                bookTitle,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                bookAuthor ?? 'No author found',
+                bookAuthor,
                 style: TextStyle(fontSize: 16, color: Colors.grey[700]),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Text(
                   'Category: $bookCategory',
-                  style: TextStyle(fontSize: 20),
+                  style: const TextStyle(fontSize: 20),
                 ),
               ),
               Row(
                 children: [
-                  Text('Rating: ', style: TextStyle(fontSize: 18)),
+                  const Text('Rating: ', style: TextStyle(fontSize: 18)),
                   _buildStars(4.5),
                   const SizedBox(width: 8),
                   const Text('4.5 (1,234 reviews)'),
@@ -67,7 +73,7 @@ class DetailsPage extends StatelessWidget {
               Text('Price', style: TextStyle(color: Colors.grey[700])),
               Text(
                 '\$$bookPrice',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -76,8 +82,8 @@ class DetailsPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                bookDescription ?? 'No description provided',
-                style: TextStyle(height: 1.5),
+                bookDescription,
+                style: const TextStyle(height: 1.5),
               ),
               const SizedBox(height: 32),
               SizedBox(
@@ -85,20 +91,20 @@ class DetailsPage extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () async {
                     try {
-                      final bookId = routeArguments['id'];
                       if (bookId != null) {
-                        await SupabaseConfig.client
-                            .from('favorites')
-                            .insert({'book_id': bookId});
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Added to favorites')),
-                        );
+                        await BookService.addToFavorites(bookId.toString());
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Added to favorites')),
+                          );
+                        }
                       }
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}')),
-                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error: ${e.toString()}')),
+                        );
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -129,3 +135,4 @@ class DetailsPage extends StatelessWidget {
     );
   }
 }
+

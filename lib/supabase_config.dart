@@ -10,8 +10,10 @@ class SupabaseConfig {
       anonKey: anonKey,
       debug: true,
     );
-    print('⚡️ Supabase initialized. Current user: ${client.auth.currentUser?.email}');
+    // Consider adding a logger here instead of print for production apps
+    // print('⚡️ Supabase initialized. Current user: ${client.auth.currentUser?.email}');
   }
 
   static SupabaseClient get client => Supabase.instance.client;
 }
+

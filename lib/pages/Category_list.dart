@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../model/book.dart';
 import '../services/book_service.dart';
 import '../supabase_config.dart';
@@ -15,21 +14,21 @@ class CategoryList extends StatefulWidget {
 }
 
 class _CategoryListState extends State<CategoryList> {
-  late String category;
+  String category = '';
   List<Book> books = [];
   bool isLoading = true;
 
   @override
-  void initState() {
-    super.initState();
-    category = ModalRoute.of(context)?.settings.arguments as String? ?? 'Uncategorized';
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    category = args?['category'] ?? 'Uncategorized';
     _loadBooks();
   }
 
   Future<void> _loadBooks() async {
     setState(() => isLoading = true);
     try {
-      // First get category ID
       final categoryResponse = await SupabaseConfig.client
           .from('categories')
           .select('id')
@@ -37,15 +36,21 @@ class _CategoryListState extends State<CategoryList> {
           .single();
 
       final categoryId = categoryResponse['id'] as int;
+      final booksData = await BookService.getBooksByCategory(categoryId);
 
-      // Then get books by category ID
-      books = await BookService.getBooksByCategory(categoryId);
+      setState(() {
+        books = booksData;
+      });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading books: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading books: $e')),
+        );
+      }
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -84,7 +89,7 @@ class _CategoryListState extends State<CategoryList> {
                   'title': book.title,
                   'author': book.author,
                   'description': book.description,
-                  'category': book.category,
+                  'category': book.categoryName,
                   'price': book.price,
                 },
               ),
@@ -95,3 +100,4 @@ class _CategoryListState extends State<CategoryList> {
     );
   }
 }
+

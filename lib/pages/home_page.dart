@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   final pricesNode = FocusNode();
 
   List<Book> books = [];
-  late List<String> categories = ['Science', 'Programming', 'Art', 'Literature'];
+  List<String> categories = [];
   bool isLoading = true;
   String? selectedCategory;
 
@@ -38,28 +38,42 @@ class _HomePageState extends State<HomePage> {
     _loadData();
   }
 
+  @override
+  void dispose() {
+    titleController.dispose();
+    authorController.dispose();
+    descriptionController.dispose();
+    priceController.dispose();
+    titleNode.dispose();
+    authorNode.dispose();
+    descNode.dispose();
+    pricesNode.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     setState(() => isLoading = true);
     try {
-      // Load books with category names
-      final books = await BookService.getBooks();
-
-      // Load categories
+      final booksData = await BookService.getBooks();
       final categoriesData = await BookService.getCategories();
       final categoryNames = categoriesData.map((c) => c['name'] as String).toList();
 
-      setState(() {
-        this.books = books;
-        this.categories = categoryNames;
-      });
-
+      if (mounted) {
+        setState(() {
+          books = booksData;
+          categories = categoryNames;
+        });
+      }
     } catch (e) {
-      print('Error loading data: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading data: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading data: $e')),
+        );
+      }
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -73,14 +87,16 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.logout, color: Colors.black87),
             onPressed: () async {
               await SupabaseConfig.client.auth.signOut();
-              Navigator.pushReplacementNamed(context, SignInPage.routeName);
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, SignInPage.routeName);
+              }
             },
           ),
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: IconButton(
               icon: const Icon(
-                Icons.add_shopping_cart_outlined,
+                Icons.favorite,
                 color: Colors.indigo,
               ),
               onPressed: () => Navigator.pushNamed(context, FavoritesPage.routeName),
@@ -106,7 +122,9 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 16),
             SizedBox(
               height: 200,
-              child: ListView.builder(
+              child: books.isEmpty
+                  ? const Center(child: Text('No books available'))
+                  : ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: books.length,
                 itemBuilder: (context, index) {
@@ -124,19 +142,16 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 16),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              childAspectRatio: 3,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildCategory('Science', Icons.science_outlined),
-                _buildCategory('Programming', Icons.computer),
-                _buildCategory('Art', Icons.palette),
-                _buildCategory('Literature', Icons.menu_book),
-              ],
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                childAspectRatio: 3,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: categories.map((category) {
+                  return _buildCategory(category, _getCategoryIcon(category));
+                }).toList(),
+              ),
             ),
           ],
         ),
@@ -148,6 +163,21 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'science':
+        return Icons.science_outlined;
+      case 'programming':
+        return Icons.computer;
+      case 'art':
+        return Icons.palette;
+      case 'literature':
+        return Icons.menu_book;
+      default:
+        return Icons.book;
+    }
+  }
+
   Future<void> _showBottomSheet() {
     return showModalBottomSheet(
       context: context,
@@ -156,53 +186,51 @@ class _HomePageState extends State<HomePage> {
         return Container(
           height: 420,
           padding: const EdgeInsets.all(16),
-          child: Expanded(
-            child: Column(
-              children: [
-                Text(
-                  'Add New Book',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.indigo,
+          child: Column(
+            children: [
+              Text(
+                'Add New Book',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.indigo,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _buildTextField(
+                controller: titleController,
+                label: 'Book Title',
+                node: titleNode,
+                nextNode: authorNode,
+              ),
+              _buildTextField(
+                controller: authorController,
+                label: 'Author Name',
+                node: authorNode,
+                nextNode: descNode,
+              ),
+              _buildTextField(
+                controller: descriptionController,
+                label: 'Description',
+                node: descNode,
+                nextNode: pricesNode,
+              ),
+              _buildTextField(
+                controller: priceController,
+                label: 'Price',
+                node: pricesNode,
+              ),
+              const SizedBox(height: 16),
+              _buildCategoryDropdown(),
+              const Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _addNewBook,
+                    child: const Text('Add Book'),
                   ),
-                ),
-                const SizedBox(height: 10),
-                _buildTextField(
-                  controller: titleController,
-                  label: 'Book Title',
-                  node: titleNode,
-                  nextNode: authorNode,
-                ),
-                _buildTextField(
-                  controller: authorController,
-                  label: 'Author Name',
-                  node: authorNode,
-                  nextNode: descNode,
-                ),
-                _buildTextField(
-                  controller: descriptionController,
-                  label: 'Description',
-                  node: descNode,
-                  nextNode: pricesNode,
-                ),
-                _buildTextField(
-                  controller: priceController,
-                  label: 'Price',
-                  node: pricesNode,
-                ),
-                const SizedBox(height: 16),
-                _buildCategoryDropdown(),
-                const Spacer(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                        onPressed: _addNewBook,
-                        child: const Text('Add Book'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         );
       },
@@ -232,44 +260,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Future<void> _showNewCategoryDialog() async {
-  //   final newCategory = await showDialog<String>(
-  //     context: context,
-  //     builder: (context) {
-  //       final controller = TextEditingController();
-  //       return AlertDialog(
-  //         title: const Text('New Category'),
-  //         content: TextField(
-  //           controller: controller,
-  //           decoration: const InputDecoration(
-  //             labelText: 'Category Name',
-  //           ),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.pop(context),
-  //             child: const Text('Cancel', style: TextStyle(color: Colors.red),),
-  //           ),
-  //           TextButton(
-  //             onPressed: () => Navigator.pop(context, controller.text),
-  //             child: const Text('Create'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  //
-  //   if (newCategory != null && newCategory.isNotEmpty) {
-  //     setState(() {
-  //       selectedCategory = newCategory;
-  //       if (!categories.contains(newCategory)) {
-  //         categories.add(newCategory);
-  //         categories.sort();
-  //       }
-  //     });
-  //   }
-  // }
-
   Future<void> _addNewBook() async {
     if (titleController.text.isEmpty ||
         authorController.text.isEmpty ||
@@ -282,32 +272,23 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      // First get the category ID from the category name
       final categoryResponse = await SupabaseConfig.client
           .from('categories')
           .select('id')
           .eq('name', selectedCategory!)
           .single();
 
-      final categoryId = categoryResponse['id'] as int;
-
-      // Create book object with proper category_id
       final newBook = {
         'title': titleController.text,
         'author': authorController.text,
         'description': descriptionController.text,
         'price': priceController.text,
-        'category_id': categoryId,
+        'category_id': categoryResponse['id'],
       };
 
-      // Insert into Supabase
-      final response = await SupabaseConfig.client
+      await SupabaseConfig.client
           .from('books')
-          .insert(newBook)
-          .select()
-          .single();
-
-      print('Book added successfully: $response');
+          .insert(newBook);
 
       // Clear form
       titleController.clear();
@@ -321,15 +302,17 @@ class _HomePageState extends State<HomePage> {
       if (mounted) Navigator.pop(context);
 
     } on PostgrestException catch (e) {
-      print('Supabase error: ${e.message}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Database error: ${e.message}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Database error: ${e.message}')),
+        );
+      }
     } catch (e) {
-      print('Unexpected error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding book: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding book: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -348,21 +331,13 @@ class _HomePageState extends State<HomePage> {
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.indigo, width: 1),
         ),
-        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12)
+        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       ),
       onSubmitted: (_) => FocusScope.of(context).requestFocus(nextNode),
     );
   }
 
   Widget _buildFeaturedBook(BuildContext context, Book book) {
-
-    String categoryName;
-    try {
-      categoryName = categories[book.categoryId - 1];
-    } catch (e) {
-      categoryName = 'Unknown';
-    }
-
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
@@ -372,7 +347,7 @@ class _HomePageState extends State<HomePage> {
           'title': book.title,
           'author': book.author,
           'description': book.description,
-          'category': categoryName,
+          'category': book.categoryName,
           'price': book.price,
         },
       ),
@@ -395,21 +370,17 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 8),
-              FittedBox(
-                child: Text(
-                  book.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Text(
+                book.title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              FittedBox(
-                child: Text(
-                  book.author,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Text(
+                book.author,
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
               Text(
@@ -425,8 +396,8 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
   Widget _buildCategory(String name, IconData icon) {
-    final count = books.where((b) => b.category == name).length;
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
@@ -441,26 +412,14 @@ class _HomePageState extends State<HomePage> {
               Icon(icon, color: primaryColor),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      '$count ${count == 1 ? 'book' : 'books'}',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  name,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ],
