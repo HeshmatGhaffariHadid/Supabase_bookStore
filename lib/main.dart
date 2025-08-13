@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:supabase_v/pages/Category_list.dart';
 import 'package:supabase_v/pages/details_page.dart';
 import 'package:supabase_v/pages/favorite_page.dart';
 import 'package:supabase_v/pages/home_page.dart';
 import 'package:supabase_v/pages/signin_signup_pages/SignUp_page.dart';
 import 'package:supabase_v/pages/signin_signup_pages/signIn_page.dart';
+import 'package:supabase_v/services/auth/auth_wrapper.dart';
 import 'package:supabase_v/supabase_config.dart';
 
 Future<void> main() async {
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(appBarTheme: AppBarTheme(elevation: 1)),
       debugShowCheckedModeBanner: false,
-      initialRoute: SignInPage.routeName,
+      home: AuthWrapper(),
       routes: {
         HomePage.routName: (context) => HomePage(),
         FavoritesPage.routeName: (context) => FavoritesPage(),
