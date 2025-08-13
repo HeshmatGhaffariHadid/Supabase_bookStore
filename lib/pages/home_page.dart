@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.only(right: 10),
             child: IconButton(
               icon: const Icon(
-                Icons.favorite,
+                Icons.shopping_cart,
                 color: Colors.red,
               ),
               onPressed: () => Navigator.pushNamed(context, FavoritesPage.routeName),
