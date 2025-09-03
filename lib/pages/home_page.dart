@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage> {
             child: IconButton(
               icon: const Icon(
                 Icons.shopping_cart,
-                color: Colors.red,
+                color: Colors.indigo,
               ),
               onPressed: () => Navigator.pushNamed(context, FavoritesPage.routeName),
             ),
@@ -157,6 +157,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
         onPressed: _showBottomSheet,
         child: const Icon(Icons.add, color: Colors.indigo, size: 30),
       ),
