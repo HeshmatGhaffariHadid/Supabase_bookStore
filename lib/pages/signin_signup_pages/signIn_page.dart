@@ -181,25 +181,4 @@ class _SignInPageState extends State<SignInPage> {
       ),
     );
   }
-
-  TextField _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    required FocusNode focusNode,
-  }) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        enabled: true,
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.black38, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
-        ),
-      ),
-      focusNode: focusNode,
-    );
-  }
 }

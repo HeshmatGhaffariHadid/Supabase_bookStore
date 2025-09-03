@@ -38,7 +38,12 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Back')),
+      backgroundColor: const Color(0XFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: const Color(0XFFF5F5F5),
+          elevation: 0,
+          title: Text('Back'),
+      ),
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
@@ -119,14 +124,11 @@ class _SignUpPageState extends State<SignUpPage> {
                           try {setState(() {
                             signedUp = true;
                           });
-                            print('🟡 user is signing up...');
-
                              await SupabaseConfig.client.auth
                                 .signUp(
                                   email: _emailController.text.trim(),
                                   password: _passwordController.text.trim(),
                                 );
-                            print('🟢 user signed up successfully');
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             HomePage.routName,
@@ -139,7 +141,6 @@ class _SignUpPageState extends State<SignUpPage> {
                             setState(() {
                               signedUp = false;
                             });
-                            print('🔴 Failed to sign-up, error: $e');
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Failed to sign-up!')),
                             );
@@ -158,7 +159,9 @@ class _SignUpPageState extends State<SignUpPage> {
                         foregroundColor: Colors.white,
                         elevation: 4,
                       ),
-                      child: signedUp ? CircularProgressIndicator(color: Colors.white, strokeWidth: 2,) : Text('Register', style: TextStyle(fontSize: 20)),
+                      child: signedUp
+                          ? CircularProgressIndicator(color: Colors.white, strokeWidth: 2,)
+                          : Text('Register', style: TextStyle(fontSize: 20)),
                     ),
                   ],
                 ),
@@ -169,32 +172,4 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     );
   }
-}
-
-TextFormField _buildTextField({
-  required BuildContext context,
-  required String label,
-  required TextEditingController controller,
-  required FocusNode focusNode,
-  required FocusNode nextNode,
-  required Function validate,
-}) {
-  return TextFormField(
-    controller: controller,
-    obscureText: label.split(' ').contains('Password') ? true : false,
-    enabled: true,
-    decoration: InputDecoration(
-      labelText: label,
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.black38, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
-      ),
-    ),
-    focusNode: focusNode,
-    onSaved: (value) {
-      FocusScope.of(context).requestFocus(nextNode);
-    },
-  );
 }
