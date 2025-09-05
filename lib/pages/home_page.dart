@@ -184,61 +184,69 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showBottomSheet() {
     return showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
+      isScrollControlled: true, // <-- important
       builder: (BuildContext context) {
-        return Container(
-          height: 420,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Text(
-                'Add New Book',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.indigo,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _buildTextField(
-                controller: titleController,
-                label: 'Book Title',
-                node: titleNode,
-                nextNode: authorNode,
-              ),
-              _buildTextField(
-                controller: authorController,
-                label: 'Author Name',
-                node: authorNode,
-                nextNode: descNode,
-              ),
-              _buildTextField(
-                controller: descriptionController,
-                label: 'Description',
-                node: descNode,
-                nextNode: pricesNode,
-              ),
-              _buildTextField(
-                controller: priceController,
-                label: 'Price',
-                node: pricesNode,
-              ),
-              const SizedBox(height: 16),
-              _buildCategoryDropdown(),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom, // moves sheet above keyboard
+          ),
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // let content size itself
                 children: [
-                  TextButton(
-                    onPressed: _addNewBook,
-                    child: const Text('Add Book'),
+                  Text(
+                    'Add New Book',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.indigo,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                    controller: titleController,
+                    label: 'Book Title',
+                    node: titleNode,
+                    nextNode: authorNode,
+                  ),
+                  _buildTextField(
+                    controller: authorController,
+                    label: 'Author Name',
+                    node: authorNode,
+                    nextNode: descNode,
+                  ),
+                  _buildTextField(
+                    controller: descriptionController,
+                    label: 'Description',
+                    node: descNode,
+                    nextNode: pricesNode,
+                  ),
+                  _buildTextField(
+                    controller: priceController,
+                    label: 'Price',
+                    node: pricesNode,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildCategoryDropdown(),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: _addNewBook,
+                        child: const Text('Add Book'),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         );
       },
     );
   }
+
 
   Widget _buildCategoryDropdown() {
     return DropdownButtonFormField<String>(
