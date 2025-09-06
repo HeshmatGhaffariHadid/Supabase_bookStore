@@ -2,10 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:supabase_v/services/book_service.dart';
 import '../constants.dart';
 
-class DetailsPage extends StatelessWidget {
+class DetailsPage extends StatefulWidget {
   static const routeName = '/details';
 
   const DetailsPage({super.key});
+
+  @override
+  State<DetailsPage> createState() => _DetailsPageState();
+}
+
+class _DetailsPageState extends State<DetailsPage> {
+  bool isAdding = false;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +98,9 @@ class DetailsPage extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () async {
                     try {
+                      setState(() {
+                        isAdding = true;
+                      });
                       if (bookId != null) {
                         await BookService.addToFavorites(bookId.toString());
                         if (context.mounted) {
@@ -105,6 +115,10 @@ class DetailsPage extends StatelessWidget {
                           SnackBar(content: Text('Error: ${e.toString()}')),
                         );
                       }
+                    } finally {
+                      setState(() {
+                        isAdding = false;
+                      });
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -113,7 +127,7 @@ class DetailsPage extends StatelessWidget {
                     backgroundColor: Colors.indigo[400],
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Add to Favorites', style: TextStyle(fontSize: 18)),
+                  child: isAdding ? CircularProgressIndicator(color: Colors.white, strokeWidth: 1) : Text('Add to Favorites', style: TextStyle(fontSize: 18)),
                 ),
               ),
             ],

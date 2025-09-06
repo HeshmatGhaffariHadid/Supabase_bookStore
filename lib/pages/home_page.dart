@@ -184,17 +184,17 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showBottomSheet() {
     return showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // <-- important
+      isScrollControlled: true,
       builder: (BuildContext context) {
         return Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // moves sheet above keyboard
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           child: SingleChildScrollView(
             child: Container(
               padding: const EdgeInsets.all(16),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // let content size itself
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'Add New Book',
