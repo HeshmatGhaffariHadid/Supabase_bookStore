@@ -8,6 +8,7 @@ import '../constants.dart';
 import '../model/book.dart';
 import 'details_page.dart';
 import 'favorite_page.dart';
+import 'dart:core';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -86,9 +87,15 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black87),
             onPressed: () async {
-              await SupabaseConfig.client.auth.signOut();
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, SignInPage.routeName);
+              final stopwatch = Stopwatch()..start();
+              try {
+                await SupabaseConfig.client.auth.signOut();
+                if (mounted) {
+                  Navigator.pushReplacementNamed(context, SignInPage.routeName);
+                }
+              } finally {
+                stopwatch.stop();
+                print('🟡 AUTH_PERFORMANCE - logout: ${stopwatch.elapsedMilliseconds} ms');
               }
             },
           ),
@@ -296,18 +303,14 @@ class _HomePageState extends State<HomePage> {
         'category_id': categoryResponse['id'],
       };
 
-      await SupabaseConfig.client
-          .from('books')
-          .insert(newBook);
+      await BookService.addNewBook(newBook);
 
-      // Clear form
       titleController.clear();
       authorController.clear();
       descriptionController.clear();
       priceController.clear();
       setState(() => selectedCategory = null);
 
-      // Refresh data
       await _loadData();
       if (mounted) Navigator.pop(context);
 

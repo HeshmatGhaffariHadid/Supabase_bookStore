@@ -3,6 +3,7 @@ import '../../constants.dart';
 import '../../custom-widgets/text_form_field.dart';
 import '../../supabase_config.dart';
 import '../home_page.dart';
+import 'dart:core';
 
 class SignUpPage extends StatefulWidget {
   SignUpPage({super.key});
@@ -39,8 +40,8 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          elevation: 0,
-          title: Text('Back'),
+        elevation: 0,
+        title: Text('Back'),
       ),
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -91,12 +92,12 @@ class _SignUpPageState extends State<SignUpPage> {
                           });
                         },
                         icon:
-                            obSecureText
-                                ? Icon(Icons.visibility_off_outlined)
-                                : Icon(
-                                  Icons.visibility_outlined,
-                                  color: Colors.indigo,
-                                ),
+                        obSecureText
+                            ? Icon(Icons.visibility_off_outlined)
+                            : Icon(
+                          Icons.visibility_outlined,
+                          color: Colors.indigo,
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -119,19 +120,21 @@ class _SignUpPageState extends State<SignUpPage> {
                       focusNode: _registerNode,
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          try {setState(() {
-                            signedUp = true;
-                          });
-                             await SupabaseConfig.client.auth
+                          final stopwatch = Stopwatch()..start();
+                          try {
+                            setState(() {
+                              signedUp = true;
+                            });
+                            await SupabaseConfig.client.auth
                                 .signUp(
-                                  email: _emailController.text.trim(),
-                                  password: _passwordController.text.trim(),
-                                );
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            HomePage.routName,
-                                (route) => false,
-                          );
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text.trim(),
+                            );
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              HomePage.routName,
+                                  (route) => false,
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Welcome back')),
                             );
@@ -142,12 +145,14 @@ class _SignUpPageState extends State<SignUpPage> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Failed to sign-up!')),
                             );
-                          }finally{
+                          } finally {
+                            stopwatch.stop();
                             setState(() {
                               signedUp = false;
                             });
                             _emailController.clear();
                             _passwordController.clear();
+                            print('🟡 AUTH_PERFORMANCE - signUp: ${stopwatch.elapsedMilliseconds} ms');
                           }
                         }
                       },

@@ -127,7 +127,8 @@ class _DetailsPageState extends State<DetailsPage> {
                     backgroundColor: Colors.indigo[400],
                     foregroundColor: Colors.white,
                   ),
-                  child: isAdding ? CircularProgressIndicator(color: Colors.white, strokeWidth: 1) : Text('Add to Favorites', style: TextStyle(fontSize: 18)),
+                  child: isAdding ? CircularProgressIndicator(color: Colors.white, strokeWidth: 1)
+                      : Text('Add to Favorites', style: TextStyle(fontSize: 18)),
                 ),
               ),
             ],

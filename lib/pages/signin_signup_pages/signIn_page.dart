@@ -5,6 +5,7 @@ import '../../custom-widgets/text_form_field.dart';
 import '../../supabase_config.dart';
 import '../home_page.dart';
 import 'SignUp_page.dart';
+import 'dart:core';
 
 class SignInPage extends StatefulWidget {
   static const routeName = '/signIn';
@@ -70,12 +71,12 @@ class _SignInPageState extends State<SignInPage> {
                           });
                         },
                         icon:
-                            obSecureText
-                                ? Icon(Icons.visibility_off_outlined)
-                                : Icon(
-                                  Icons.visibility_outlined,
-                                  color: Colors.indigo,
-                                ),
+                        obSecureText
+                            ? Icon(Icons.visibility_off_outlined)
+                            : Icon(
+                          Icons.visibility_outlined,
+                          color: Colors.indigo,
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -89,6 +90,9 @@ class _SignInPageState extends State<SignInPage> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
+                          final stopwatch = Stopwatch()..start();
+                          String logSuffix = '';
+
                           try {
                             setState(() {
                               loggingIn = true;
@@ -123,12 +127,15 @@ class _SignInPageState extends State<SignInPage> {
                                 content: Text('Login failed, user not found!'),
                               ),
                             );
+                            logSuffix = ' (ERROR)';
                           } finally {
+                            stopwatch.stop();
                             setState(() {
                               loggingIn = false;
                             });
                             emailController.clear();
                             passwordController.clear();
+                            print('🟡 AUTH_PERFORMANCE - signIn: ${stopwatch.elapsedMilliseconds} ms$logSuffix');
                           }
                         }
                       },
@@ -139,12 +146,12 @@ class _SignInPageState extends State<SignInPage> {
                         elevation: 4,
                       ),
                       child:
-                          loggingIn
-                              ? CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              )
-                              : Text('Login', style: TextStyle(fontSize: 20)),
+                      loggingIn
+                          ? CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      )
+                          : Text('Login', style: TextStyle(fontSize: 20)),
                     ),
                     Row(
                       children: [
